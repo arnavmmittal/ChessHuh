@@ -66,6 +66,8 @@ def drawBoard(app, canvas):
             else:
                 drawCell(app, canvas, i, j, "white")
 
+# def drawPcs(app, canvas):
+#     for i in range(app.)
 
 
 def main():
