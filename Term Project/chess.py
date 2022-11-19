@@ -1,5 +1,6 @@
 import math, random, copy
 from piecesClass import *
+from boardClass import *
 from cmu_112_graphics import *
 
 def appStarted(app):
@@ -66,8 +67,11 @@ def drawBoard(app, canvas):
             else:
                 drawCell(app, canvas, i, j, "white")
 
-# def drawPcs(app, canvas):
-#     for i in range(app.)
+def drawPcs(app, canvas, board):
+    for i in range(app.rows):
+        for j in range(app.cols):
+            p = board[i][j]
+
 
 
 def main():
