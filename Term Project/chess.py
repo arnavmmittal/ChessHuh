@@ -14,12 +14,15 @@ def appStarted(app):
     app.clicks = []
     app.selection = ()
     
+    # initialize variables 
 
-
+    # current state that game is going in
     app.state = classes.Board()
     app.legalMoves = app.state.isLegal()
     app.moved = False
     app.cellSize = (app.width - 2*app.margin)/8
+
+    # loading images based on pieces
     pcs = ['bRook', 'bKn', 'bBish', 'bQueen', 'bKing', 'bPawn', 'wRook', 'wBish', 'wKn', 'wQueen', 'wKing', 'wPawn']
     for p in pcs:
         app.Pieces[p] = app.scaleImage(app.loadImage('pieceImages/' + p + ".png"),1.2)
@@ -29,36 +32,43 @@ def appStarted(app):
 #     if app.moved:
 #         app.legalMoves = app.state.isLegal()
 #         app.moved = False
-    
-        
+  
 def mousePressed(app, event):
+    # make sure mouse is pressed inside chess baord
     if (event.x < app.width-app.margin) and event.x > app.margin:
         if (event.y < app.height-app.margin and event.y > app.margin):
             r = event.y // app.cellSize
             c = event.x // app.cellSize
             if r <9 and r >-1:
                 if c < 9 and c > -1:
+                    # get tuple of selection point
                     if app.selection == (event.x, event.y):
+                        
                         app.clicks = []
                         app.selection = ()
                     else:
+                        # convert from float to int
                         r,c = math.floor(r), math.floor(c)
+
                         app.selection = (r,c)
                         app.clicks.append(app.selection)
+                    # if mouse clicked twice, piece is moved
                     if len(app.clicks) == 2:
                         print(app.selection)
                         m = classes.Move(app.state.board,app.clicks[0],app.clicks[1])
                         print(m, 'x')
                         # if m in app.legalMoves:
                         #     print("hi")
+                        # moving piece
                         app.state.movePiece(m)
                         app.moved = True
-                        
+                        # reset
                         print(app.state.board)
                         app.selection = ()
                         app.clicks = []
         
 def keyPressed(app, event):
+    # reset board
     if event.key == "r":
         app.state.board = classes.Board().board
 
@@ -77,13 +87,15 @@ def getCellBounds(app, row, col):
     y1 = app.margin + (row+1) * cellHeight
     return (x0, y0, x1, y1)
 
+# draws each cell in chess board
 def drawCell(app, canvas, row, col, color):
     # draw each cell in board
     canvas.create_rectangle(getCellBounds(app, row, col),
         fill=color, outline='black', width=4)
 
+# draws chess board
 def drawBoard(app, canvas):
-    
+    # loop through chess board size and draw different colored square based on odd or even
     for i in range(app.rows):
         for j in range(app.cols):
 
@@ -93,11 +105,14 @@ def drawBoard(app, canvas):
             else:
                 drawCell(app, canvas, i, j, "white")
 
-
+# draws all the pieces at the right place
 def drawPcs(app, canvas, board):
+
     for i in range(app.rows):
         for j in range(app.cols):
             (x0,y0,x1,y1) = getCellBounds(app,i,j)
+
+            # using app.Pieces, this checks the board for piece occupied squares and fills them with images
             p = board[i][j]
             if "_" != p:
                 canvas.create_image((x0+x1)/2, (y0+y1)/2, image=ImageTk.PhotoImage(app.Pieces[p]))
