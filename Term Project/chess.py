@@ -1,42 +1,44 @@
 import math, random, copy
-from piecesClass import *
-from boardClass import *
+import boardClass
 from cmu_112_graphics import *
 
+# Piece Images from ->
+# https://commons.wikimedia.org/wiki/Category:PNG_chess_pieces/Standard_transparent
 def appStarted(app):
     app.rows = 8
     app.cols = 8
-    app.cBoard = []
+    # app.cBoard = []
     app.margin = 100
-
-    for i in range(app.rows):
-        app.cBoard += [[None]*app.cols]
-    # bKing = K(Pieces)
+    app.Pieces = dict()
+    app.start = True
     
-    for i in range(app.rows):
-        for j in range(app.cols):
-            if (i+j % 2 == 1):
-                app.cBoard[i][j] = "black"
-            else:
-                app.cBoard[i][j] = "white"
-def drawRook(app, canvas):
-    canvas.create_rectangle(400,400,450,450, fill='red')
+    pcs = ['bRook', 'bKn', 'bBish', 'bQueen', 'bKing', 'bPawn', 'wRook', 'wBish', 'wKn', 'wQueen', 'wKing', 'wPawn']
+    for p in pcs:
+        app.Pieces[p] = app.loadImage('pieceImages/' + p + ".png")
+
+    # for i in range(app.rows):
+    #     app.cBoard += [[None]*app.cols]
+    # # bKing = K(Pieces)
+    
+    # for i in range(app.rows):
+    #     for j in range(app.cols):
+    #         if (i+j % 2 == 1):
+    #             app.cBoard[i][j] = "black"
+    #         else:
+    #             app.cBoard[i][j] = "white"
+
+
+    
+
 # def timerFired(app):
+    
+        
 
 def mousePressed(app, event):
     if event.x == 200 :
         selectedPiece = 1
 # def keyPressed(app, event):
     # return
-def redrawAll(app, canvas):
-    # canvas.create_text("Welcome to Ches")
-    drawBoard(app, canvas)
-    drawRook(app,canvas)
-    print(app.cBoard[5][4])
-# def drawBoard(app, canvas):
-#     for i in range(8):
-#         for j in range(8):
-#             canvas.create_rectangle()
 
 
     # https://www.cs.cmu.edu/~112/notes/notes-animations-part2.html
@@ -60,21 +62,32 @@ def drawCell(app, canvas, row, col, color):
 
 def drawBoard(app, canvas):
     # loops that create board of equal blue cells
+    
     for i in range(app.rows):
         for j in range(app.cols):
             if ((i+j) % 2 == 1):
                 drawCell(app, canvas, i, j, "black")
+
             else:
                 drawCell(app, canvas, i, j, "white")
+
 
 def drawPcs(app, canvas, board):
     for i in range(app.rows):
         for j in range(app.cols):
             p = board[i][j]
+            if "_" != p:
+                canvas.create_image(200, 200, image=ImageTk.PhotoImage(app.Pieces[p]))
 
+def redrawAll(app, canvas):
+    # canvas.create_text("Welcome to Chess")
+    drawBoard(app, canvas)
+    drawPcs(app, canvas, boardClass.Board().board)
 
 
 def main():
     runApp(width=800, height=800)
+
+
 if __name__ == '__main__':
     main()
