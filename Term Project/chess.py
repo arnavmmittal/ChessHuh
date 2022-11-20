@@ -1,5 +1,5 @@
 import math, random, copy
-import boardClass
+import classes
 from cmu_112_graphics import *
 
 # Piece Images from ->
@@ -7,41 +7,48 @@ from cmu_112_graphics import *
 def appStarted(app):
     app.rows = 8
     app.cols = 8
-    # app.cBoard = []
     app.margin = 100
     app.Pieces = dict()
     app.start = True
-    
+    app.counter = 0
+    app.clicks = []
+    app.selection = ()
+    app.cellSize = (app.width - 2*app.margin)/8
     pcs = ['bRook', 'bKn', 'bBish', 'bQueen', 'bKing', 'bPawn', 'wRook', 'wBish', 'wKn', 'wQueen', 'wKing', 'wPawn']
     for p in pcs:
-        app.Pieces[p] = app.loadImage('pieceImages/' + p + ".png")
-
-    # for i in range(app.rows):
-    #     app.cBoard += [[None]*app.cols]
-    # # bKing = K(Pieces)
-    
-    # for i in range(app.rows):
-    #     for j in range(app.cols):
-    #         if (i+j % 2 == 1):
-    #             app.cBoard[i][j] = "black"
-    #         else:
-    #             app.cBoard[i][j] = "white"
-
-
-    
+        app.Pieces[p] = app.scaleImage(app.loadImage('pieceImages/' + p + ".png"),1.2)
+        
 
 # def timerFired(app):
     
         
-
 def mousePressed(app, event):
-    if event.x == 200 :
-        selectedPiece = 1
-# def keyPressed(app, event):
-    # return
+    if (event.x < app.width-app.margin) and event.x > app.margin:
+        if (event.y < app.height-app.margin and event.y > app.margin):
+            r = event.y // app.cellSize
+            c = event.x // app.cellSize
+            if app.selection == (event.x, event.y):
+                app.clicks = []
+                app.selection = ()
+            else:
+                r,c = math.floor(r), math.floor(c)
+                app.selection = (r,c)
+                app.clicks.append(app.selection)
+            if len(app.clicks) == 2:
+                classes.Board().board[0][0] = "orange"
+                # m = classes.Move(classes.Board().board,app.clicks[0],app.clicks[1])
+                # classes.Board().movePiece(m)
+                
+                print(classes.Board().board)
+                app.selection = ()
+                app.clicks = []
+
+def keyPressed(app, event):
+    if event.key == "r":
+        app.start = True
 
 
-    # https://www.cs.cmu.edu/~112/notes/notes-animations-part2.html
+# https://www.cs.cmu.edu/~112/notes/notes-animations-part2.html
 def getCellBounds(app, row, col):
     # aka "modelToView"
     # returns (x0, y0, x1, y1) corners/bounding box of given cell in grid
@@ -61,12 +68,12 @@ def drawCell(app, canvas, row, col, color):
         fill=color, outline='black', width=4)
 
 def drawBoard(app, canvas):
-    # loops that create board of equal blue cells
     
     for i in range(app.rows):
         for j in range(app.cols):
+
             if ((i+j) % 2 == 1):
-                drawCell(app, canvas, i, j, "black")
+                drawCell(app, canvas, i, j, "maroon")
 
             else:
                 drawCell(app, canvas, i, j, "white")
@@ -75,19 +82,18 @@ def drawBoard(app, canvas):
 def drawPcs(app, canvas, board):
     for i in range(app.rows):
         for j in range(app.cols):
+            (x0,y0,x1,y1) = getCellBounds(app,i,j)
             p = board[i][j]
             if "_" != p:
-                canvas.create_image(200, 200, image=ImageTk.PhotoImage(app.Pieces[p]))
+                canvas.create_image((x0+x1)/2, (y0+y1)/2, image=ImageTk.PhotoImage(app.Pieces[p]))
 
 def redrawAll(app, canvas):
-    # canvas.create_text("Welcome to Chess")
+    canvas.create_text(app.width/2, app.height/10, text="Welcome to ChessHuh!", font="Arial 30",fill='black')
     drawBoard(app, canvas)
-    drawPcs(app, canvas, boardClass.Board().board)
-
+    drawPcs(app, canvas, classes.Board().board)
 
 def main():
     runApp(width=800, height=800)
-
 
 if __name__ == '__main__':
     main()
