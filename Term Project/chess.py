@@ -13,6 +13,12 @@ def appStarted(app):
     app.counter = 0
     app.clicks = []
     app.selection = ()
+    
+
+
+    app.state = classes.Board()
+    app.legalMoves = app.state.isLegal()
+    app.moved = False
     app.cellSize = (app.width - 2*app.margin)/8
     pcs = ['bRook', 'bKn', 'bBish', 'bQueen', 'bKing', 'bPawn', 'wRook', 'wBish', 'wKn', 'wQueen', 'wKing', 'wPawn']
     for p in pcs:
@@ -20,6 +26,9 @@ def appStarted(app):
         
 
 # def timerFired(app):
+#     if app.moved:
+#         app.legalMoves = app.state.isLegal()
+#         app.moved = False
     
         
 def mousePressed(app, event):
@@ -27,25 +36,31 @@ def mousePressed(app, event):
         if (event.y < app.height-app.margin and event.y > app.margin):
             r = event.y // app.cellSize
             c = event.x // app.cellSize
-            if app.selection == (event.x, event.y):
-                app.clicks = []
-                app.selection = ()
-            else:
-                r,c = math.floor(r), math.floor(c)
-                app.selection = (r,c)
-                app.clicks.append(app.selection)
-            if len(app.clicks) == 2:
-                classes.Board().board[0][0] = "orange"
-                # m = classes.Move(classes.Board().board,app.clicks[0],app.clicks[1])
-                # classes.Board().movePiece(m)
-                
-                print(classes.Board().board)
-                app.selection = ()
-                app.clicks = []
-
+            if r <9 and r >-1:
+                if c < 9 and c > -1:
+                    if app.selection == (event.x, event.y):
+                        app.clicks = []
+                        app.selection = ()
+                    else:
+                        r,c = math.floor(r), math.floor(c)
+                        app.selection = (r,c)
+                        app.clicks.append(app.selection)
+                    if len(app.clicks) == 2:
+                        print(app.selection)
+                        m = classes.Move(app.state.board,app.clicks[0],app.clicks[1])
+                        print(m, 'x')
+                        # if m in app.legalMoves:
+                        #     print("hi")
+                        app.state.movePiece(m)
+                        app.moved = True
+                        
+                        print(app.state.board)
+                        app.selection = ()
+                        app.clicks = []
+        
 def keyPressed(app, event):
     if event.key == "r":
-        app.start = True
+        app.state.board = classes.Board().board
 
 
 # https://www.cs.cmu.edu/~112/notes/notes-animations-part2.html
@@ -90,7 +105,7 @@ def drawPcs(app, canvas, board):
 def redrawAll(app, canvas):
     canvas.create_text(app.width/2, app.height/10, text="Welcome to ChessHuh!", font="Arial 30",fill='black')
     drawBoard(app, canvas)
-    drawPcs(app, canvas, classes.Board().board)
+    drawPcs(app, canvas, app.state.board)
 
 def main():
     runApp(width=800, height=800)

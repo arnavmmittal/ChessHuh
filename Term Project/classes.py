@@ -29,6 +29,65 @@ class Board(object):
             self.turn = 1
         else:
             self.turn = 0
+    
+    def getMoves(self):
+        possibilities = []
+
+        for i in range(len(self.board)):
+            for j in range(len(self.board[0])):
+                side = self.board[i][j][0]
+                if (self.turn == 0 and side == 'w') or (self.turn == 1 and side == 'b'):
+                    p = self.board[i][j][1:]
+                    
+                    if p == 'Rook':
+                        self.getRooks(possibilities, i, j)
+                    elif p == 'Pawn':
+
+                        self.getPawns(possibilities, i, j)
+                    elif p == 'King':
+                        self.getKings(possibilities, i, j)
+                    elif p == 'Queen':
+                        self.getQueens(possibilities, i, j)
+        
+        return possibilities
+        
+    def isLegal(self):
+        return self.getMoves()
+
+    def getRooks(self, possibilities, row, col):
+        return
+
+    def getPawns(self, possibilities, row, col):
+        if self.turn == 0:
+            if self.board[row-1][col] == '_':
+                possibilities.append(Move(self.board,(row,col),(row-1, col)))
+                if row == 6 and self.board[row-2][col] == '_':
+                    possibilities.append(Move(self.board,(row,col),(row-2, col)))
+
+            if col + 1 <= 7:
+                if self.board[row-1][col+1][0] == 'b':
+                    possibilities.append(Move(self.board,(row,col),(row-1, col+1)))
+            if col - 1 >= 0:
+                if self.board[row-1][col-1][0] == 'b':
+                    possibilities.append(Move(self.board,(row,col),(row-1, col-1)))
+        else:
+            if self.board[row+1][col] == '_':
+                possibilities.append(Move(self.board,(row,col),(row+1, col)))
+                if row == 1 and self.board[row+2][col] == '_':
+                    possibilities.append(Move(self.board,(row,col),(row+2, col)))
+
+            if col + 1 <= 7:
+                if self.board[row+1][col+1][0] == 'w':
+                    possibilities.append(Move(self.board,(row,col),(row+1, col+1)))
+            if col - 1 >= 0:
+                if self.board[row+1][col-1][0] == 'w':
+                    possibilities.append(Move(self.board,(row,col),(row+1, col-1)))
+
+    def getKings(self, possibilities, row, col):
+        return
+    def getQueens(self, possibilities, row, col):
+        return
+
 
 class Move(object):
     def __init__(self, board, start, end):
