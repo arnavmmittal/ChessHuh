@@ -18,6 +18,7 @@ def appStarted(app):
 
     # current state that game is going in
     app.state = classes.Board()
+    # app.movement = classes.Move()
     app.legalMoves = app.state.isLegal()
     app.moved = False
     app.cellSize = (app.width - 2*app.margin)/8
@@ -34,11 +35,12 @@ def appStarted(app):
 #         app.moved = False
   
 def mousePressed(app, event):
-    # make sure mouse is pressed inside chess baord
+    # make sure mouse is pressed inside chess board
     if (event.x < app.width-app.margin) and event.x > app.margin:
         if (event.y < app.height-app.margin and event.y > app.margin):
-            r = event.y // app.cellSize
-            c = event.x // app.cellSize
+            r = event.y // (app.cellSize)
+            c = event.x // (app.cellSize)
+            print(r,c,'yessir')
             if r <9 and r >-1:
                 if c < 9 and c > -1:
                     # get tuple of selection point
@@ -48,29 +50,38 @@ def mousePressed(app, event):
                         app.selection = ()
                     else:
                         # convert from float to int
-                        r,c = math.floor(r), math.floor(c)
-
+                        r,c = math.floor(r)-1, math.floor(c)-1
+                        print(r,c)
                         app.selection = (r,c)
                         app.clicks.append(app.selection)
                     # if mouse clicked twice, piece is moved
                     if len(app.clicks) == 2:
-                        print(app.selection)
+                        print(app.selection,app.clicks)
                         m = classes.Move(app.state.board,app.clicks[0],app.clicks[1])
+                        print(m.getOfficialSquare())
                         print(m, 'x')
-                        # if m in app.legalMoves:
-                        #     print("hi")
-                        # moving piece
-                        app.state.movePiece(m)
-                        app.moved = True
+                        print(app.legalMoves, 'y')
+                        if m in app.legalMoves:
+                            print("georig")
+                        #moving piece
+                            app.state.movePiece(m)
+                            app.moved = True
                         # reset
                         print(app.state.board)
                         app.selection = ()
                         app.clicks = []
+            if app.moved:
+                print("xyz")
+                app.moved = False
+                app.legalMoves = app.state.isLegal()
         
 def keyPressed(app, event):
     # reset board
     if event.key == "r":
-        app.state.board = classes.Board().board
+        app.state = classes.Board()
+        app.moved = False
+        app.legalMoves = app.state.isLegal()
+    
 
 
 # https://www.cs.cmu.edu/~112/notes/notes-animations-part2.html

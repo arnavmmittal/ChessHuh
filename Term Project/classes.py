@@ -42,6 +42,7 @@ class Board(object):
     
     # get all the possible moves in general
     def getMoves(self):
+        #Move(self.board, (7,5),(5,5))
         possibilities = []
 
         # loop through board
@@ -56,15 +57,19 @@ class Board(object):
                     p = self.board[i][j][1:]
                     
                     # based on piece type find all possible moves of that type
-                    if p == 'Rook':
-                        self.getRooks(possibilities, i, j)
-                    elif p == 'Pawn':
-
+                    if p == 'Pawn':
+                        print("bye")
                         self.getPawns(possibilities, i, j)
+                    elif p == 'Bish':
+                        self.getBishops(possibilities, i, j)
+                    elif p == 'Rook':
+                        self.getRooks(possibilities, i, j)
                     elif p == 'King':
                         self.getKings(possibilities, i, j)
                     elif p == 'Queen':
                         self.getQueens(possibilities, i, j)
+                    elif p == 'Kn':
+                        self.getKnights(possibilities, i, j)
         
         return possibilities
         
@@ -72,26 +77,28 @@ class Board(object):
     def isLegal(self):
         return self.getMoves()
 
-    def getRooks(self, possibilities, row, col):
-        return
 
     # pawn movements possible
     def getPawns(self, possibilities, row, col):
+        print(row,col, 'jerry')
         # white's turn
         if self.turn == 0:
             # single move case
+            print("z")
             if self.board[row-1][col] == '_':
-                possibilities.append(Move(self.board,(row,col),(row-1, col)))
+                print("hi", self.board[row][col], row)
+                possibilities.append(Move(self.board,(row,col),(row-1,col)))
 
                 # double move case
                 if row == 6 and self.board[row-2][col] == '_':
+                    print("a")
                     possibilities.append(Move(self.board,(row,col),(row-2, col)))
-            # capturing diagonal right
+            # capturing diagonal left
             if col + 1 <= 7:
                 if self.board[row-1][col+1][0] == 'b':
                     possibilities.append(Move(self.board,(row,col),(row-1, col+1)))
 
-            # capturing diagonal left
+            # capturing diagonal right
             if col - 1 >= 0:
                 if self.board[row-1][col-1][0] == 'b':
                     possibilities.append(Move(self.board,(row,col),(row-1, col-1)))
@@ -113,35 +120,79 @@ class Board(object):
                 if self.board[row+1][col-1][0] == 'w':
                     possibilities.append(Move(self.board,(row,col),(row+1, col-1)))
 
+    def getBishops(self, possibilities, row, col):
+        dirs = [(-1, -1),(-1,1), (1,-1),(1,1)]
+
+
+        if self.turn == 0:
+            opponent = 'b'
+        else:
+            opponent = 'w'
+
+        for direction in dirs:
+            for i in range(8):
+                # 
+                finalR = row + direction[0] * i
+                finalC = col + direction[1] * i
+
+                if finalR >= 0 and finalR < 8:
+                    if finalC >= 0 and finalC < 8:
+
+                        finalP = self.board[finalR][finalC]
+
+                        if (finalP == '_'):
+                            possibilities.append(Move(self.board,(row, col),(finalR, finalC)))
+                        elif (finalP[0] == opponent):
+                            possibilities.append(Move(self.board, (row,col),(finalR,finalC)))
+                            break
+                    
+    def getRooks(self, possibilities, row, col):
+        return
     def getKings(self, possibilities, row, col):
         return
     def getQueens(self, possibilities, row, col):
+        self.getBishops(possibilities, row, col)
+        self.getRooks(possibilities, row, col)
+    def getKnights(self, possibilities, row, col):
         return
 
 # move class that tracks movement by using start and end
 class Move(object):
     def __init__(self, board, start, end):
         # get the row and col of the square clicked on and the target square
-        self.startR = start[0]-1
-        self.endR = end[0]-1
-        self.startC = start[1]-1
-        self.endC = end[1]-1
+        self.startR = start[0]
+        self.endR = end[0]
+        self.startC = start[1]
+        self.endC = end[1]
 
+        self.check = 1000*self.startR + 100*self.startC + 10*self.endR + self.endC
+        #str(self.startR) + str(self.endR) + str(self.startC) + str(self.endC)
+        print(self.check, 'bobby')
         # piece moved and piece that is taken
         self.pMove = board[self.startR][self.startC]
         self.pTaken = board[self.endR][self.endC]
+       
 
         # converting to dictionaries (basically how chess notation works but in terms of indices)
         self.convertFile = {'a':0, 'b':1, 'c':2, 'd':3, 'e':4, 'f':5, 'g':6, 'h':7}
         self.convertC = {0:'a', 1:'b', 2:'c', 3:'d', 4:'e', 5:'f', 6:'g', 7:'h'}
         self.convertLevel = {'1':7, '2':6, '3':5, '4':4, '5':3, '6':2, '7':1, '8':0}
         self.convertR = {7:'1', 6:'2', 5:'3', 4:'4', 3:'5', 2:'6', 1:'7', 0:'8'}
+
         
+    def __eq__(self, other):
+        if isinstance(other, Move):
+            return self.check == other.check
+        else:
+            return False
+        
+    def getLine(self, row, col):
+        return self.convertC[col] + self.convertR[row]
+
     # get the official chess notation 
     def getOfficialSquare(self):
-        temp = self.convertC(self.startC) + self.convertR(self.startR)
-        hold = self.convertC(self.endC) + self.convertR(self.endR)
-        return temp + hold
-
+        return self.getLine(self.startR, self.startC) + self.getLine(self.endR, self.endC)
+    
+    
     
         
