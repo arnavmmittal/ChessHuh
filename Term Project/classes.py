@@ -171,14 +171,58 @@ class Board(object):
                         elif (finalP[0] == opponent):
                             possibilities.append(Move(self.board, (row,col),(finalR,finalC)))
                             break
-                        
+
     def getKings(self, possibilities, row, col):
-        return
+        if self.turn == 0:
+            opponent = 'b'
+        else:
+            opponent = 'w'
+        # Word Search https://www.cs.cmu.edu/~112/notes/2d-list-case-studies.html#wordsearch1 
+        for drow in [-1,0,1]:
+            for dcol in [-1,0,1]:
+                if (drow, dcol) != (0,0):
+                    finalR = row + drow
+                    finalC = col + dcol
+                    
+                    # check if in bounds
+                    if finalR >= 0 and finalR < 8:
+                        if finalC >= 0 and finalC < 8:
+                            # set result position "piece" to final piece
+                            finalP = self.board[finalR][finalC]
+                            # if moving to empty square, add those possible moves
+                            if (finalP == '_'):
+                                possibilities.append(Move(self.board,(row,col),(finalR,finalC)))
+                            # if opponent's piece is on square in range, add those possible captures
+                            elif (finalP[0] == opponent):
+                                possibilities.append(Move(self.board,(row,col),(finalR,finalC)))
+                                break
+
     def getQueens(self, possibilities, row, col):
+        # queen movement is the same as bishop and rook combined
         self.getBishops(possibilities, row, col)
         self.getRooks(possibilities, row, col)
+
     def getKnights(self, possibilities, row, col):
-        return
+        dirs = [(-2, -1),(-2,1), (1,2),(-1,2),(2,1),(2,-1),(1,-2),(-1,-2)]
+
+        if self.turn == 0:
+            friendly = 'w'
+        else:
+            friendly = 'b'
+
+        for direction in dirs:
+            finalR = row + direction[0] 
+            finalC = col + direction[1] 
+
+            if finalR >= 0 and finalR < 8:
+                if finalC >= 0 and finalC < 8:
+
+                    finalP = self.board[finalR][finalC]
+
+                    if (finalP[0] != friendly):
+                        possibilities.append(Move(self.board,(row, col),(finalR, finalC)))
+                    
+        
 
 # move class that tracks movement by using start and end
 class Move(object):

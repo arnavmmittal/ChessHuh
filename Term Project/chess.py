@@ -67,9 +67,11 @@ def mousePressed(app, event):
                             app.state.movePiece(m)
                             app.moved = True
                         # reset
-                        print(app.state.board)
-                        app.selection = ()
-                        app.clicks = []
+                            print(app.state.board)
+                            app.selection = ()
+                            app.clicks = []
+                        else:
+                            app.clicks = [app.selection]
             if app.moved:
                 print("xyz")
                 app.moved = False
