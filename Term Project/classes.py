@@ -147,7 +147,31 @@ class Board(object):
                             break
                     
     def getRooks(self, possibilities, row, col):
-        return
+        dirs = [(-1, 0),(0,-1,), (1,0),(0,1)]
+
+
+        if self.turn == 0:
+            opponent = 'b'
+        else:
+            opponent = 'w'
+
+        for direction in dirs:
+            for i in range(8):
+                # 
+                finalR = row + direction[0] * i
+                finalC = col + direction[1] * i
+
+                if finalR >= 0 and finalR < 8:
+                    if finalC >= 0 and finalC < 8:
+
+                        finalP = self.board[finalR][finalC]
+
+                        if (finalP == '_'):
+                            possibilities.append(Move(self.board,(row, col),(finalR, finalC)))
+                        elif (finalP[0] == opponent):
+                            possibilities.append(Move(self.board, (row,col),(finalR,finalC)))
+                            break
+                        
     def getKings(self, possibilities, row, col):
         return
     def getQueens(self, possibilities, row, col):
