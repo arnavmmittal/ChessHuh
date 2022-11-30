@@ -213,6 +213,7 @@ class Board(object):
                 if self.board[row+1][col-1][0] == 'w':
                     possibilities.append(Move(self.board,(row,col),(row+1, col-1)))
 
+    # bishop move possibilities
     def getBishops(self, possibilities, row, col):
         dirs = [(-1, -1),(-1,1), (1,-1),(1,1)]
 
@@ -238,7 +239,7 @@ class Board(object):
                         elif (finalP[0] == opponent):
                             possibilities.append(Move(self.board, (row,col),(finalR,finalC)))
                             break
-                    
+    # rook move possibilities               
     def getRooks(self, possibilities, row, col):
         dirs = [(-1, 0),(0,-1,), (1,0),(0,1)]
 
@@ -266,7 +267,7 @@ class Board(object):
                             break
                         
                 
-
+    # king move possibilities
     def getKings(self, possibilities, row, col):
         if self.turn == 0:
             opponent = 'b'
@@ -292,11 +293,13 @@ class Board(object):
                                 possibilities.append(Move(self.board,(row,col),(finalR,finalC)))
                                 break
 
+    # queen move possibilities
     def getQueens(self, possibilities, row, col):
         # queen movement is the same as bishop and rook combined
         self.getBishops(possibilities, row, col)
         self.getRooks(possibilities, row, col)
 
+    # knight move possibilities
     def getKnights(self, possibilities, row, col):
         dirs = [(-2, -1),(-2,1), (1,2),(-1,2),(2,1),(2,-1),(1,-2),(-1,-2)]
 
