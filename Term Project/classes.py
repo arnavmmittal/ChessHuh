@@ -14,10 +14,14 @@ class Board(object):
             ['wPawn', 'wPawn', 'wPawn','wPawn','wPawn','wPawn','wPawn','wPawn'],
             ['wRook', 'wKn', 'wBish','wQueen','wKing','wBish','wKn','wRook'],  
         ]
-
+        self.gameOver = False
+        self.cMate = False
+        self.draw = False
         # past list of moves
         self.moves = []
 
+        self.bKing = (0,4)
+        self.wKing = (7,4)
         # 0 is white, 1 is black's turn
         self.turn = 0
 
@@ -39,10 +43,15 @@ class Board(object):
             self.turn = 1
         else:
             self.turn = 0
+        
+        if val.pMove == 'bKing':
+            self.bKing = (val.endR, val.endC)
+        elif val.pMove == 'wKing':
+            self.wKing = (val.endR, val.endC)
     
     # get all the possible moves in general
     def getMoves(self):
-        #Move(self.board, (7,5),(5,5))
+        
         possibilities = []
 
         # loop through board
@@ -72,11 +81,95 @@ class Board(object):
                         self.getKnights(possibilities, i, j)
         
         return possibilities
-        
+    
+    def check(self):
+        if (self.turn == 0):
+            return self.gettingKilled(self.wKing[0], self.wKing[1])
+        else:
+            return self.gettingKilled(self.bKing[0], self.bKing[1])
+            
     # check if move is legal 
     def isLegal(self):
-        return self.getMoves()
+        # get all general possible moves
+        possibilities = self.getMoves()
 
+        # loop backwards 
+        for i in range(len(possibilities) - 1, -1, -1):
+            self.movePiece(possibilities[i])
+
+            # switch who's move it is
+            if (self.turn == 0):
+                self.turn = 1
+            else:
+                self.turn = 0
+            
+            # check if the move causes a check
+            if (self.check()):
+                # remove possibility since move is illegal
+                possibilities.remove(possibilities[i])
+
+            # swtich turn 
+            if (self.turn == 0):
+                self.turn = 1
+            else:
+                self.turn = 0
+
+            # reverse move 
+            if (len(self.moves) != 0):
+                # get last move
+                last = self.moves.pop()
+                #switch
+                self.board[last.startR][last.startC] = last.pMove
+                self.board[last.endR][last.endC] = last.pTaken
+                # switch turn
+                if (self.turn == 0):
+                    self.turn = 1
+                else:
+                    self.turn = 0
+                # change king's position
+                if last.pMove == 'wKing':
+                    self.wKing = (last.startR, last.startC)
+                elif last.pMove == 'bKing':
+                    self.bKing = (last.startR, last.startC)
+            # no moves left
+            if (len(possibilities) == 0):
+                # game is over
+                self.gameOver = True
+
+                # checkmate versus stalemate
+                if self.check():
+                    self.cMate = True
+                else:
+                    self.draw = True
+            else:
+                # reset
+                self.draw = False
+                self.cMate = False
+                self.gameOver = False
+
+        return possibilities
+
+    # checking if board location is being hit by a piece
+    def gettingKilled(self, row, col):
+        # switch turn
+        if (self.turn == 0):
+            self.turn = 1
+        else:
+            self.turn = 0
+        
+        # get enemy's moves
+        oppPossibilities = self.getMoves()
+        # switch turn 
+        if (self.turn == 0):
+            self.turn = 1
+        else:
+            self.turn = 0
+
+        # go through possible enemy moves and return true if final square is same as checking square
+        for option in oppPossibilities:
+            if option.endR == row and option.endC == col:
+                return True
+        return False
 
     # pawn movements possible
     def getPawns(self, possibilities, row, col):
@@ -171,6 +264,8 @@ class Board(object):
                         elif (finalP[0] == opponent):
                             possibilities.append(Move(self.board, (row,col),(finalR,finalC)))
                             break
+                        
+                
 
     def getKings(self, possibilities, row, col):
         if self.turn == 0:
@@ -233,9 +328,9 @@ class Move(object):
         self.startC = start[1]
         self.endC = end[1]
 
-        self.check = 1000*self.startR + 100*self.startC + 10*self.endR + self.endC
+        self.num = 1000*self.startR + 100*self.startC + 10*self.endR + self.endC
         #str(self.startR) + str(self.endR) + str(self.startC) + str(self.endC)
-        print(self.check, 'bobby')
+        print(self.num, 'bobby')
         # piece moved and piece that is taken
         self.pMove = board[self.startR][self.startC]
         self.pTaken = board[self.endR][self.endC]
@@ -250,7 +345,7 @@ class Move(object):
         
     def __eq__(self, other):
         if isinstance(other, Move):
-            return self.check == other.check
+            return self.num == other.num
         else:
             return False
         
