@@ -2,6 +2,7 @@ import math, random, copy
 import classes
 from cmu_112_graphics import *
 
+
 # Piece Images from ->
 # https://commons.wikimedia.org/wiki/Category:PNG_chess_pieces/Standard_transparent
 def appStarted(app):
@@ -13,6 +14,7 @@ def appStarted(app):
     app.counter = 0
     app.clicks = []
     app.selection = ()
+    app.timer = 500
     
     # initialize variables 
 
@@ -22,6 +24,7 @@ def appStarted(app):
     app.legalMoves = app.state.isLegal()
     app.moved = False
     app.cellSize = (app.width - 2*app.margin)/8
+    app.gameOver = False
 
     # loading images based on pieces
     pcs = ['bRook', 'bKn', 'bBish', 'bQueen', 'bKing', 'bPawn', 'wRook', 'wBish', 'wKn', 'wQueen', 'wKing', 'wPawn']
@@ -29,10 +32,23 @@ def appStarted(app):
         app.Pieces[p] = app.scaleImage(app.loadImage('pieceImages/' + p + ".png"),1.2)
         
 
-# def timerFired(app):
-#     if app.moved:
-#         app.legalMoves = app.state.isLegal()
-#         app.moved = False
+def timerFired(app):
+    if app.gameOver:
+        app.state = classes.Board()
+    if app.state.cMate == True:
+        print("CheckMate")
+        app.gameOver == True
+    if app.state.draw == True:
+        print("Stalemate")
+        app.gameOver = True
+    app.timer -= 1
+    if app.timer == 0:
+        app.gameOver = True
+        app.timer = 500
+
+    
+
+    
   
 def mousePressed(app, event):
     # make sure mouse is pressed inside chess board
@@ -61,16 +77,19 @@ def mousePressed(app, event):
                         print(m.getOfficialSquare())
                         print(m, 'x')
                         print(app.legalMoves, 'y')
-                        if m in app.legalMoves:
-                            print("georig")
-                        #moving piece
-                            app.state.movePiece(m)
-                            app.moved = True
-                        # reset
-                            print(app.state.board)
-                            app.selection = ()
-                            app.clicks = []
-                        else:
+                        for i in range(len(app.legalMoves)):
+
+                            if m == app.legalMoves[i]:
+                                print("georig")
+                                
+                            #moving piece
+                                app.state.movePiece(app.legalMoves[i])
+                                app.moved = True
+                            # reset
+                                print(app.state.board)
+                                app.selection = ()
+                                app.clicks = []
+                        if not app.moved:
                             app.clicks = [app.selection]
             if app.moved:
                 print("xyz")

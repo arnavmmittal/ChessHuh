@@ -14,9 +14,15 @@ class Board(object):
             ['wPawn', 'wPawn', 'wPawn','wPawn','wPawn','wPawn','wPawn','wPawn'],
             ['wRook', 'wKn', 'wBish','wQueen','wKing','wBish','wKn','wRook'],  
         ]
+
+        # initialize game deciding variables
         self.gameOver = False
         self.cMate = False
         self.draw = False
+
+        self.enPassant = ()
+
+        self.promoteValue = ""
         # past list of moves
         self.moves = []
 
@@ -24,6 +30,11 @@ class Board(object):
         self.wKing = (7,4)
         # 0 is white, 1 is black's turn
         self.turn = 0
+
+
+        self.castlingState = Castle(True,True,True,True)
+        self.castles = [Castle(self.castlingState.wRight, self.castlingState.bRight,
+                                self.castlingState.wLeft, self.castlingState.bLeft)]
 
     # move piece function that allows piece to be moved
     def movePiece(self, val):
@@ -48,7 +59,46 @@ class Board(object):
             self.bKing = (val.endR, val.endC)
         elif val.pMove == 'wKing':
             self.wKing = (val.endR, val.endC)
-    
+
+        if val.promote:
+            # promoting = input("promote")
+            # # 'Queen (q), Rook (r), Bishop (b), or Knight (k)'
+            # proP = ''
+            # if (promoting == 'q'):
+            #     proP = 'Queen'
+            # elif (promoting == 'r'):
+            #     proP = "Rook"
+            # elif (promoting == 'b'):
+            #     proP = "Bish"
+            # elif (promoting == 'k'):
+            #     proP = 'Kn'
+            # else:
+            #     proP = 'Queen'
+            # print(proP, 'yes')
+            self.board[val.endR][val.endC] = val.pMove[0] + 'Queen'
+
+        if val.checkEnPassant:
+            self.board[val.startR][val.endC] = '_'
+
+        if val.pMove[1:] == 'Pawn' and abs(val.startR - val.endR) == 2:
+            self.enPassant = ((val.startR+val.endR)//2, val.startC)
+        else:
+            self.enPassant = ()
+
+        if val.checkCastle:
+            if val.endC - val.startC == 2:
+                self.board[val.endR][val.endC-1] = self.board[val.endR][val.endC+1]
+                self.board[val.endR][val.endC+1]='_'
+            else:
+                self.board[val.endR][val.endC+1] = self.board[val.endR][val.endC-2]
+                self.board[val.endR][val.endC-2]='_'
+
+
+        self.castling(val)
+
+        self.castles.append(Castle(self.castlingState.wRight, self.castlingState.bRight,
+                                self.castlingState.wLeft, self.castlingState.bLeft))
+
     # get all the possible moves in general
     def getMoves(self):
         
@@ -82,6 +132,28 @@ class Board(object):
         
         return possibilities
     
+    def castling(self, val):
+        if val.pMove == 'bKing':
+            self.castlingState.bRight = False
+            self.castlingState.bLeft = False
+        elif val.pMove == 'wKing':
+            self.castlingState.wRight = False
+            self.castlingState.wLeft = False
+        elif val.pMove == 'bRook':
+            if val.startR == 0:
+                if val.startC == 0:
+                    self.castlingState.bLeft = False
+                elif val.startC == 7:
+                    self.castlingState.bRight = False
+        elif val.pMove == 'wRook':
+            if val.startR == 7:
+                if val.startC == 0:
+                    self.castlingState.wLeft = False
+                elif val.startC == 7:
+                    self.castlingState.wRight = False
+
+
+
     def check(self):
         if (self.turn == 0):
             return self.gettingKilled(self.wKing[0], self.wKing[1])
@@ -91,7 +163,16 @@ class Board(object):
     # check if move is legal 
     def isLegal(self):
         # get all general possible moves
+        hold = self.enPassant
+        temp = Castle(self.castlingState.wRight, self.castlingState.bRight,
+                                self.castlingState.wLeft, self.castlingState.bLeft)
+
         possibilities = self.getMoves()
+
+        if self.turn == 0:
+            self.getCastles(self.wKing[0],self.wKing[1],possibilities)
+        else:
+            self.getCastles(self.bKing[0],self.bKing[1],possibilities)
 
         # loop backwards 
         for i in range(len(possibilities) - 1, -1, -1):
@@ -131,6 +212,24 @@ class Board(object):
                     self.wKing = (last.startR, last.startC)
                 elif last.pMove == 'bKing':
                     self.bKing = (last.startR, last.startC)
+                if last.checkEnPassant:
+                    self.board[last.endR][last.endC] = '_'
+                    self.board[last.startR][last.endC] = last.pTaken
+                    self.enPassant = (last.endR,last.endC)
+                if last.pMove[1:] == 'Pawn' and abs(last.startR - last.endC) == 2:
+                    self.enPassant = ()
+                self.castles.pop()
+                self.castlingState = self.castles[-1]
+
+                if last.checkCastle:
+                    if last.endC - last.startC == 2:
+                        self.board[last.endR][last.endC+1] = self.board[last.endR][last.endC-1]
+                        self.board[last.endR][last.endC-1]='_'
+                    else:
+                        self.board[last.endR][last.endC-2] = self.board[last.endR][last.endC+1]
+                        self.board[last.endR][last.endC+1]='_'
+
+
             # no moves left
             if (len(possibilities) == 0):
                 # game is over
@@ -146,7 +245,8 @@ class Board(object):
                 self.draw = False
                 self.cMate = False
                 self.gameOver = False
-
+        self.enPassant = hold
+        self.castlingState = temp
         return possibilities
 
     # checking if board location is being hit by a piece
@@ -181,7 +281,6 @@ class Board(object):
             if self.board[row-1][col] == '_':
                 print("hi", self.board[row][col], row)
                 possibilities.append(Move(self.board,(row,col),(row-1,col)))
-
                 # double move case
                 if row == 6 and self.board[row-2][col] == '_':
                     print("a")
@@ -190,11 +289,15 @@ class Board(object):
             if col + 1 <= 7:
                 if self.board[row-1][col+1][0] == 'b':
                     possibilities.append(Move(self.board,(row,col),(row-1, col+1)))
+                elif self.enPassant == (row-1, col+1):
+                    possibilities.append(Move(self.board,(row,col),(row-1, col+1), checkEnPassant=True))
 
             # capturing diagonal right
             if col - 1 >= 0:
                 if self.board[row-1][col-1][0] == 'b':
                     possibilities.append(Move(self.board,(row,col),(row-1, col-1)))
+                elif self.enPassant == (row-1, col-1):
+                    possibilities.append(Move(self.board,(row,col),(row-1, col-1), checkEnPassant=True))
 
         # black's pawns moving, same as white just reversed directions
         else:
@@ -208,10 +311,14 @@ class Board(object):
             if col + 1 <= 7:
                 if self.board[row+1][col+1][0] == 'w':
                     possibilities.append(Move(self.board,(row,col),(row+1, col+1)))
+                elif self.enPassant == (row+1, col+1):
+                    possibilities.append(Move(self.board,(row,col),(row+1, col+1), checkEnPassant=True))
             # capture to left
             if col - 1 >= 0:
                 if self.board[row+1][col-1][0] == 'w':
                     possibilities.append(Move(self.board,(row,col),(row+1, col-1)))
+                elif self.enPassant == (row+1, col-1):
+                    possibilities.append(Move(self.board,(row,col),(row+1, col-1), checkEnPassant=True))
 
     # bishop move possibilities
     def getBishops(self, possibilities, row, col):
@@ -224,7 +331,7 @@ class Board(object):
             opponent = 'w'
 
         for direction in dirs:
-            for i in range(8):
+            for i in range(1, 8):
                 # 
                 finalR = row + direction[0] * i
                 finalC = col + direction[1] * i
@@ -239,9 +346,13 @@ class Board(object):
                         elif (finalP[0] == opponent):
                             possibilities.append(Move(self.board, (row,col),(finalR,finalC)))
                             break
+                        else:
+                            break
+                else:
+                    break
     # rook move possibilities               
     def getRooks(self, possibilities, row, col):
-        dirs = [(-1, 0),(0,-1,), (1,0),(0,1)]
+        dirs = [(-1, 0),(0,-1,),(1,0),(0,1)]
 
 
         if self.turn == 0:
@@ -250,7 +361,7 @@ class Board(object):
             opponent = 'w'
 
         for direction in dirs:
-            for i in range(8):
+            for i in range(1,8):
                 # 
                 finalR = row + direction[0] * i
                 finalC = col + direction[1] * i
@@ -265,6 +376,11 @@ class Board(object):
                         elif (finalP[0] == opponent):
                             possibilities.append(Move(self.board, (row,col),(finalR,finalC)))
                             break
+
+                        else:
+                            break
+                else:
+                    break
                         
                 
     # king move possibilities
@@ -292,7 +408,27 @@ class Board(object):
                             elif (finalP[0] == opponent):
                                 possibilities.append(Move(self.board,(row,col),(finalR,finalC)))
                                 break
+    
 
+    def getCastles(self, row, col, possibilities):
+        if self.gettingKilled(row,col):
+            return
+        if (self.turn == 0 and self.castlingState.wRight) or (self.turn == 1 and self.castlingState.bRight):
+            self.getRight(row, col, possibilities)
+        if (self.turn == 0 and self.castlingState.wLeft) or (self.turn == 1 and self.castlingState.bLeft):
+            self.getLeft(row, col, possibilities)
+    
+    def getRight(self,row, col, possibilities):
+        if self.board[row][col+1] == '_' and self.board[row][col+2] == '_':
+            if not self.gettingKilled(row, col+1) and not self.gettingKilled(row,col+2):
+                possibilities.append(Move(self.board,(row,col), (row, col+2), checkCastle = True))
+       
+
+    def getLeft(self,row, col, possibilities):
+        if self.board[row][col-1] == '_' and self.board[row][col-2] == '_' and self.board[row][col-3] == '_':
+            if not self.gettingKilled(row, col-1) and not self.gettingKilled(row,col-2):
+                possibilities.append(Move(self.board,(row,col), (row, col-2), checkCastle = True))
+        
     # queen move possibilities
     def getQueens(self, possibilities, row, col):
         # queen movement is the same as bishop and rook combined
@@ -324,7 +460,7 @@ class Board(object):
 
 # move class that tracks movement by using start and end
 class Move(object):
-    def __init__(self, board, start, end):
+    def __init__(self, board, start, end, checkEnPassant=False, checkCastle = False):
         # get the row and col of the square clicked on and the target square
         self.startR = start[0]
         self.endR = end[0]
@@ -337,7 +473,18 @@ class Move(object):
         # piece moved and piece that is taken
         self.pMove = board[self.startR][self.startC]
         self.pTaken = board[self.endR][self.endC]
-       
+        self.promote = (self.pMove == 'bPawn' and self.endR == 7) or (self.pMove == 'wPawn' and self.endR == 0)
+        self.checkEnPassant = checkEnPassant
+        self.checkCastle = checkCastle
+        if self.checkEnPassant:
+            print("bellybobby")
+            if self.pMove == 'wPawn':
+                self.pTaken = 'bPawn'
+            elif (self.pMove == 'bPawn'):
+                self.pTaken = 'wPawn'
+
+        #(self.pMove[1] == 'Pawn' and enPassant == (self.endR, self.endC))
+
 
         # converting to dictionaries (basically how chess notation works but in terms of indices)
         self.convertFile = {'a':0, 'b':1, 'c':2, 'd':3, 'e':4, 'f':5, 'g':6, 'h':7}
@@ -358,7 +505,13 @@ class Move(object):
     # get the official chess notation 
     def getOfficialSquare(self):
         return self.getLine(self.startR, self.startC) + self.getLine(self.endR, self.endC)
-    
+
+class Castle():
+    def __init__(self, wRight, bRight, wLeft, bLeft):
+        self.wRight = wRight
+        self.bRight = bRight
+        self.wLeft = wLeft
+        self.bLeft = bLeft  
     
     
         
