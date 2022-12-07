@@ -1,4 +1,3 @@
-# These are the classes used to create my chess game
 
 # board class that keeps track of board and each square
 class Board(object):
@@ -14,32 +13,38 @@ class Board(object):
             ['wPawn', 'wPawn', 'wPawn','wPawn','wPawn','wPawn','wPawn','wPawn'],
             ['wRook', 'wKn', 'wBish','wQueen','wKing','wBish','wKn','wRook'],  
         ]
-
+        # self.board = [
+        #     ['_', '_', '_', '_', '_', '_', '_', '_'],
+        #     ['_', '_', '_', '_', '_', '_', '_', '_'],
+        #     ['_','_','_','_','_','_','_','_'],
+        #     ['_','_','_','_','_','_','_','_'],
+        #     ['_','_','bQueen','_','_','_','_','_'],
+        #     ['_','_','_','_','_','_','_','_'],
+        #     ['_', '_', '_','_','bKing','_','_','_'],
+        #     ['wKing', '_', '_','_','_','_','_','_'],  
+        # ]\
         # initialize game deciding variables
         self.gameOver = False
         self.cMate = False
         self.draw = False
-
         self.enPassant = ()
 
-        self.promoteValue = ""
         # past list of moves
         self.moves = []
 
         self.bKing = (0,4)
         self.wKing = (7,4)
+
         # 0 is white, 1 is black's turn
         self.turn = 0
 
-
+        # state of castle using castle class
         self.castlingState = Castle(True,True,True,True)
         self.castles = [Castle(self.castlingState.wRight, self.castlingState.bRight,
                                 self.castlingState.wLeft, self.castlingState.bLeft)]
 
     # move piece function that allows piece to be moved
     def movePiece(self, val):
-        print(val.startR, val.startC, val.endR, val.endC, val.pMove)
-
         #piece being moved becomes empty
         self.board[val.startR][val.startC] = '_'
 
@@ -55,28 +60,16 @@ class Board(object):
         else:
             self.turn = 0
         
+        # get kings locations
         if val.pMove == 'bKing':
             self.bKing = (val.endR, val.endC)
         elif val.pMove == 'wKing':
             self.wKing = (val.endR, val.endC)
 
+        # promotion
         if val.promote:
-            # promoting = input("promote")
-            # # 'Queen (q), Rook (r), Bishop (b), or Knight (k)'
-            # proP = ''
-            # if (promoting == 'q'):
-            #     proP = 'Queen'
-            # elif (promoting == 'r'):
-            #     proP = "Rook"
-            # elif (promoting == 'b'):
-            #     proP = "Bish"
-            # elif (promoting == 'k'):
-            #     proP = 'Kn'
-            # else:
-            #     proP = 'Queen'
-            # print(proP, 'yes')
             self.board[val.endR][val.endC] = val.pMove[0] + 'Queen'
-
+        # check for en Passant
         if val.checkEnPassant:
             self.board[val.startR][val.endC] = '_'
 
@@ -85,6 +78,7 @@ class Board(object):
         else:
             self.enPassant = ()
 
+        # checking castle
         if val.checkCastle:
             if val.endC - val.startC == 2:
                 self.board[val.endR][val.endC-1] = self.board[val.endR][val.endC+1]
@@ -93,7 +87,6 @@ class Board(object):
                 self.board[val.endR][val.endC+1] = self.board[val.endR][val.endC-2]
                 self.board[val.endR][val.endC-2]='_'
 
-
         self.castling(val)
 
         self.castles.append(Castle(self.castlingState.wRight, self.castlingState.bRight,
@@ -101,7 +94,6 @@ class Board(object):
 
     # get all the possible moves in general
     def getMoves(self):
-        
         possibilities = []
 
         # loop through board
@@ -117,7 +109,6 @@ class Board(object):
                     
                     # based on piece type find all possible moves of that type
                     if p == 'Pawn':
-                        print("bye")
                         self.getPawns(possibilities, i, j)
                     elif p == 'Bish':
                         self.getBishops(possibilities, i, j)
@@ -133,18 +124,22 @@ class Board(object):
         return possibilities
     
     def castling(self, val):
+        # castling state (4 possible states) 
         if val.pMove == 'bKing':
             self.castlingState.bRight = False
             self.castlingState.bLeft = False
+        # based on piece moved, change castling states
         elif val.pMove == 'wKing':
             self.castlingState.wRight = False
             self.castlingState.wLeft = False
+
         elif val.pMove == 'bRook':
             if val.startR == 0:
                 if val.startC == 0:
                     self.castlingState.bLeft = False
                 elif val.startC == 7:
                     self.castlingState.bRight = False
+
         elif val.pMove == 'wRook':
             if val.startR == 7:
                 if val.startC == 0:
@@ -152,9 +147,9 @@ class Board(object):
                 elif val.startC == 7:
                     self.castlingState.wRight = False
 
-
-
+    # check for check
     def check(self):
+        # check if the piece is getting killed (or the square)
         if (self.turn == 0):
             return self.gettingKilled(self.wKing[0], self.wKing[1])
         else:
@@ -162,13 +157,15 @@ class Board(object):
             
     # check if move is legal 
     def isLegal(self):
-        # get all general possible moves
+        # en passant possible
         hold = self.enPassant
+        # hold a castle instance
         temp = Castle(self.castlingState.wRight, self.castlingState.bRight,
-                                self.castlingState.wLeft, self.castlingState.bLeft)
-
+                        self.castlingState.wLeft, self.castlingState.bLeft)
+        # get all general possible moves
         possibilities = self.getMoves()
 
+        # get castle moves possible
         if self.turn == 0:
             self.getCastles(self.wKing[0],self.wKing[1],possibilities)
         else:
@@ -212,12 +209,15 @@ class Board(object):
                     self.wKing = (last.startR, last.startC)
                 elif last.pMove == 'bKing':
                     self.bKing = (last.startR, last.startC)
+                # reverse en Passant
                 if last.checkEnPassant:
                     self.board[last.endR][last.endC] = '_'
                     self.board[last.startR][last.endC] = last.pTaken
                     self.enPassant = (last.endR,last.endC)
                 if last.pMove[1:] == 'Pawn' and abs(last.startR - last.endC) == 2:
                     self.enPassant = ()
+
+                # reverse castle
                 self.castles.pop()
                 self.castlingState = self.castles[-1]
 
@@ -229,22 +229,22 @@ class Board(object):
                         self.board[last.endR][last.endC-2] = self.board[last.endR][last.endC+1]
                         self.board[last.endR][last.endC+1]='_'
 
+        # no moves left
+        if (len(possibilities) == 0):
+            # game is over
+            self.gameOver = True
 
-            # no moves left
-            if (len(possibilities) == 0):
-                # game is over
-                self.gameOver = True
-
-                # checkmate versus stalemate
-                if self.check():
-                    self.cMate = True
-                else:
-                    self.draw = True
+            # checkmate versus stalemate
+            if self.check():
+                self.cMate = True
             else:
-                # reset
-                self.draw = False
-                self.cMate = False
-                self.gameOver = False
+                self.draw = True
+        else:
+            # reset
+            self.draw = False
+            self.cMate = False
+            self.gameOver = False
+        # switch back
         self.enPassant = hold
         self.castlingState = temp
         return possibilities
@@ -273,22 +273,21 @@ class Board(object):
 
     # pawn movements possible
     def getPawns(self, possibilities, row, col):
-        print(row,col, 'jerry')
         # white's turn
         if self.turn == 0:
             # single move case
-            print("z")
             if self.board[row-1][col] == '_':
-                print("hi", self.board[row][col], row)
                 possibilities.append(Move(self.board,(row,col),(row-1,col)))
+
                 # double move case
                 if row == 6 and self.board[row-2][col] == '_':
-                    print("a")
                     possibilities.append(Move(self.board,(row,col),(row-2, col)))
+
             # capturing diagonal left
             if col + 1 <= 7:
                 if self.board[row-1][col+1][0] == 'b':
                     possibilities.append(Move(self.board,(row,col),(row-1, col+1)))
+
                 elif self.enPassant == (row-1, col+1):
                     possibilities.append(Move(self.board,(row,col),(row-1, col+1), checkEnPassant=True))
 
@@ -296,6 +295,7 @@ class Board(object):
             if col - 1 >= 0:
                 if self.board[row-1][col-1][0] == 'b':
                     possibilities.append(Move(self.board,(row,col),(row-1, col-1)))
+
                 elif self.enPassant == (row-1, col-1):
                     possibilities.append(Move(self.board,(row,col),(row-1, col-1), checkEnPassant=True))
 
@@ -307,23 +307,27 @@ class Board(object):
                 # move twice
                 if row == 1 and self.board[row+2][col] == '_':
                     possibilities.append(Move(self.board,(row,col),(row+2, col)))
+
             # capture to right
             if col + 1 <= 7:
                 if self.board[row+1][col+1][0] == 'w':
                     possibilities.append(Move(self.board,(row,col),(row+1, col+1)))
+                # check en passant
                 elif self.enPassant == (row+1, col+1):
                     possibilities.append(Move(self.board,(row,col),(row+1, col+1), checkEnPassant=True))
+
             # capture to left
             if col - 1 >= 0:
                 if self.board[row+1][col-1][0] == 'w':
                     possibilities.append(Move(self.board,(row,col),(row+1, col-1)))
+                # check en Passant
                 elif self.enPassant == (row+1, col-1):
                     possibilities.append(Move(self.board,(row,col),(row+1, col-1), checkEnPassant=True))
 
     # bishop move possibilities
     def getBishops(self, possibilities, row, col):
+        # list of directions
         dirs = [(-1, -1),(-1,1), (1,-1),(1,1)]
-
 
         if self.turn == 0:
             opponent = 'b'
@@ -332,13 +336,13 @@ class Board(object):
 
         for direction in dirs:
             for i in range(1, 8):
-                # 
+                # get all directions for up to 8 possibilities each way at first
                 finalR = row + direction[0] * i
                 finalC = col + direction[1] * i
 
                 if finalR >= 0 and finalR < 8:
                     if finalC >= 0 and finalC < 8:
-
+                        # final Position piece
                         finalP = self.board[finalR][finalC]
 
                         if (finalP == '_'):
@@ -346,14 +350,16 @@ class Board(object):
                         elif (finalP[0] == opponent):
                             possibilities.append(Move(self.board, (row,col),(finalR,finalC)))
                             break
+                        # if same side piece in way (break out of loop no more possibilities)
                         else:
                             break
                 else:
                     break
+
     # rook move possibilities               
     def getRooks(self, possibilities, row, col):
+        # list of directions
         dirs = [(-1, 0),(0,-1,),(1,0),(0,1)]
-
 
         if self.turn == 0:
             opponent = 'b'
@@ -362,7 +368,7 @@ class Board(object):
 
         for direction in dirs:
             for i in range(1,8):
-                # 
+                # get all directions for up to 8 possibilities each way at first
                 finalR = row + direction[0] * i
                 finalC = col + direction[1] * i
 
@@ -373,10 +379,12 @@ class Board(object):
 
                         if (finalP == '_'):
                             possibilities.append(Move(self.board,(row, col),(finalR, finalC)))
+                        # opponent piece in the way
                         elif (finalP[0] == opponent):
                             possibilities.append(Move(self.board, (row,col),(finalR,finalC)))
                             break
 
+                        # if same side piece is in the way
                         else:
                             break
                 else:
@@ -409,21 +417,26 @@ class Board(object):
                                 possibilities.append(Move(self.board,(row,col),(finalR,finalC)))
                                 break
     
-
+    # get castle possibilities
     def getCastles(self, row, col, possibilities):
+        # make sure not in check or through
         if self.gettingKilled(row,col):
             return
+        
+        # castling king side versus queen side
         if (self.turn == 0 and self.castlingState.wRight) or (self.turn == 1 and self.castlingState.bRight):
             self.getRight(row, col, possibilities)
+
         if (self.turn == 0 and self.castlingState.wLeft) or (self.turn == 1 and self.castlingState.bLeft):
             self.getLeft(row, col, possibilities)
     
+    # king side castling
     def getRight(self,row, col, possibilities):
         if self.board[row][col+1] == '_' and self.board[row][col+2] == '_':
             if not self.gettingKilled(row, col+1) and not self.gettingKilled(row,col+2):
                 possibilities.append(Move(self.board,(row,col), (row, col+2), checkCastle = True))
-       
 
+    # queen side castling
     def getLeft(self,row, col, possibilities):
         if self.board[row][col-1] == '_' and self.board[row][col-2] == '_' and self.board[row][col-3] == '_':
             if not self.gettingKilled(row, col-1) and not self.gettingKilled(row,col-2):
@@ -437,6 +450,7 @@ class Board(object):
 
     # knight move possibilities
     def getKnights(self, possibilities, row, col):
+        # 8 directions
         dirs = [(-2, -1),(-2,1), (1,2),(-1,2),(2,1),(2,-1),(1,-2),(-1,-2)]
 
         if self.turn == 0:
@@ -450,15 +464,13 @@ class Board(object):
 
             if finalR >= 0 and finalR < 8:
                 if finalC >= 0 and finalC < 8:
-
+                    # get all directions for up to 8 possibilities each way at first
+                    # final position piece
                     finalP = self.board[finalR][finalC]
-
                     if (finalP[0] != friendly):
                         possibilities.append(Move(self.board,(row, col),(finalR, finalC)))
                     
-        
-
-# move class that tracks movement by using start and end
+# move class that tracks movement by using start and end 
 class Move(object):
     def __init__(self, board, start, end, checkEnPassant=False, checkCastle = False):
         # get the row and col of the square clicked on and the target square
@@ -467,24 +479,24 @@ class Move(object):
         self.startC = start[1]
         self.endC = end[1]
 
-        self.num = 1000*self.startR + 100*self.startC + 10*self.endR + self.endC
-        #str(self.startR) + str(self.endR) + str(self.startC) + str(self.endC)
-        print(self.num, 'bobby')
+        # for eq method later
+        self.num = str(self.startR) + str(self.endR) + str(self.startC) + str(self.endC)
+        
         # piece moved and piece that is taken
         self.pMove = board[self.startR][self.startC]
         self.pTaken = board[self.endR][self.endC]
+
+        # promote, castle, en passant
         self.promote = (self.pMove == 'bPawn' and self.endR == 7) or (self.pMove == 'wPawn' and self.endR == 0)
         self.checkEnPassant = checkEnPassant
         self.checkCastle = checkCastle
+
+        # check en Passant
         if self.checkEnPassant:
-            print("bellybobby")
             if self.pMove == 'wPawn':
                 self.pTaken = 'bPawn'
             elif (self.pMove == 'bPawn'):
                 self.pTaken = 'wPawn'
-
-        #(self.pMove[1] == 'Pawn' and enPassant == (self.endR, self.endC))
-
 
         # converting to dictionaries (basically how chess notation works but in terms of indices)
         self.convertFile = {'a':0, 'b':1, 'c':2, 'd':3, 'e':4, 'f':5, 'g':6, 'h':7}
@@ -492,22 +504,18 @@ class Move(object):
         self.convertLevel = {'1':7, '2':6, '3':5, '4':4, '5':3, '6':2, '7':1, '8':0}
         self.convertR = {7:'1', 6:'2', 5:'3', 4:'4', 3:'5', 2:'6', 1:'7', 0:'8'}
 
-        
+    # same object needed
     def __eq__(self, other):
         if isinstance(other, Move):
             return self.num == other.num
         else:
             return False
         
-    def getLine(self, row, col):
-        return self.convertC[col] + self.convertR[row]
 
-    # get the official chess notation 
-    def getOfficialSquare(self):
-        return self.getLine(self.startR, self.startC) + self.getLine(self.endR, self.endC)
-
+# class for castling
 class Castle():
     def __init__(self, wRight, bRight, wLeft, bLeft):
+        # 4 places where you can castle
         self.wRight = wRight
         self.bRight = bRight
         self.wLeft = wLeft
