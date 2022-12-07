@@ -13,16 +13,7 @@ class Board(object):
             ['wPawn', 'wPawn', 'wPawn','wPawn','wPawn','wPawn','wPawn','wPawn'],
             ['wRook', 'wKn', 'wBish','wQueen','wKing','wBish','wKn','wRook'],  
         ]
-        # self.board = [
-        #     ['_', '_', '_', '_', '_', '_', '_', '_'],
-        #     ['_', '_', '_', '_', '_', '_', '_', '_'],
-        #     ['_','_','_','_','_','_','_','_'],
-        #     ['_','_','_','_','_','_','_','_'],
-        #     ['_','_','bQueen','_','_','_','_','_'],
-        #     ['_','_','_','_','_','_','_','_'],
-        #     ['_', '_', '_','_','bKing','_','_','_'],
-        #     ['wKing', '_', '_','_','_','_','_','_'],  
-        # ]\
+    
         # initialize game deciding variables
         self.gameOver = False
         self.cMate = False
